@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>夏唯依-成绩达标预测器</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f7f7f7;
+  }
+  .container {
+    text-align: center;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 400px;
+  }
+  h1 {
+    color: #333;
+  }
+  p {
+    color: #666;
+    font-size: 18px;
+  }
+  input, button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  button {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #4cae4c;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>夏唯依-成绩达标预测器</h1>
+  <input type="number" id="score1" placeholder="历史分数1" />
+  <input type="number" id="score2" placeholder="历史分数2" />
+  <input type="number" id="score3" placeholder="历史分数3" />
+  <input type="number" id="score4" placeholder="历史分数4" />
+  <input type="number" id="FSX" placeholder="目标分数线" />
+  <button onclick="calculateStatistics()">预测</button>
+  <button onclick="clearFields()">清空</button>
+  <p>平均分：<span id="mean">-</span></p>
+  <p>标准差：<span id="stdDev">-</span></p>
+  <p>Z值：<span id="zScore">-</span></p>
+  <p>概率：<span id="probability">-</span>%</p>
+</div>
+
+<script>
+function calculateStatistics() {
+  // Get values from input fields
+  const scores = [
+    document.getElementById('score1').valueAsNumber || 0,
+    document.getElementById('score2').valueAsNumber || 0,
+    document.getElementById('score3').valueAsNumber || 0,
+    document.getElementById('score4').valueAsNumber || 0
+  ];
+  const FSX = document.getElementById('FSX').valueAsNumber || 0;
+
+  // Calculate mean
+  const mean = scores.reduce((acc, val) => acc + val, 0) / scores.length;
+
+  // Calculate standard deviation
+  const variance = scores.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / scores.length;
+  const stdDev = Math.sqrt(variance);
+
+  // Calculate Z-score
+  const z = (FSX - mean) / stdDev;
+
+  // Calculate probability using the cumulative distribution function
+  function NormSDist(z) {
+    const pi = Math.PI;
+    const e = Math.E;
+    const k = 1 / (1 + 0.2316419 * Math.abs(z));
+    const a1 = 0.319381530;
+    const a2 = -0.356563782;
+    const a3 = 1.781477937;
+    const a4 = -1.821255978;
+    const a5 = 1.330274429;
+    const cdf = 1 - (Math.exp(-(z * z) / 2) * (a1 * k + a2 * k * k + a3 * k * k * k + a4 * k * k * k * k + a5 * k * k * k * k * k)) / Math.sqrt(2 * pi);
+    return z < 0 ? 1 - cdf : cdf;
+  }
+
+  const probability = NormSDist(z);
+
+  // Display results
+  document.getElementById('mean').textContent = mean.toFixed(1);
+  document.getElementById('stdDev').textContent = stdDev.toFixed(1);
+  document.getElementById('zScore').textContent = z.toFixed(2);
+  document.getElementById('probability').textContent = ((1 - probability) * 100).toFixed(2);
+}
+
+function clearFields() {
+  document.getElementById('score1').value = '';
+  document.getElementById('score2').value = '';
+  document.getElementById('score3').value = '';
+  document.getElementById('score4').value = '';
+  document.getElementById('FSX').value = '';
+  document.getElementById('mean').textContent = '-';
+  document.getElementById('stdDev').textContent = '-';
+  document.getElementById('zScore').textContent = '-';
+  document.getElementById('probability').textContent = '-';
+}
+</script>
+</body>
+</html>
